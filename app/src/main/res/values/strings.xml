@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">TinkoffNews</string>
+
+    <string name="please_connect_to_internet">Check internet connection and try again</string>
+    <string name="network_request_error">Error while network requesting data</string>
+    <string name="news_data_error">There is no way to get the current news</string>
+</resources>

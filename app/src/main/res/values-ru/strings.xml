@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="please_connect_to_internet">
+        Проверьте подключение к интернету и повторите попытку</string>
+    <string name="network_request_error">Ошибка при сетевом запросе данных</string>
+    <string name="news_data_error">Нет возможности получить данные текущей новости</string>
+</resources>
