@@ -23,6 +23,12 @@ public class MainActivity extends AppCompatActivity implements DependencyDistrib
     }
 
     @Override
+    protected void onDestroy() {
+        mResolver.destroy(this);
+        super.onDestroy();
+    }
+
+    @Override
     public DependencyResolver getDependencyResolver() {
         return mResolver;
     }

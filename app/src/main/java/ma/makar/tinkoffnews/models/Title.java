@@ -8,7 +8,7 @@ public class Title implements Comparable<Title> {
 
     public final String id;
     public final String text;
-    public final Date publicationDate;
+    private final Date publicationDate;
 
     public Title(String id, String text, Date publicationDate) {
         this.id = id;

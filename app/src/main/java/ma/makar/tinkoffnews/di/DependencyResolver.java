@@ -1,22 +1,17 @@
 package ma.makar.tinkoffnews.di;
 
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.support.v4.app.FragmentActivity;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 import ma.makar.base.Assert;
-import ma.makar.tinkoffnews.ui.FlowNavigator;
-import ma.makar.tinkoffnews.ui.FragmentFlowNavigator;
 import ma.makar.tinkoffnews.cache.NewsDiskCache;
 import ma.makar.tinkoffnews.cache.Storage;
-import ma.makar.tinkoffnews.ui.controllers.NewsViewController;
-import ma.makar.tinkoffnews.ui.controllers.TitlesViewController;
-import ma.makar.tinkoffnews.ui.controllers.ViewController;
 import ma.makar.tinkoffnews.core.NewsRepository;
 import ma.makar.tinkoffnews.core.NewsRepositoryImpl;
-import ma.makar.tinkoffnews.core.helpers.TinkoffNewsUrlCreator;
-import ma.makar.tinkoffnews.core.helpers.UrlCreator;
 import ma.makar.tinkoffnews.core.loaders.DataNetworkLoader;
 import ma.makar.tinkoffnews.core.loaders.LoaderCallback;
 import ma.makar.tinkoffnews.core.loaders.NetworkLoader;
@@ -29,7 +24,13 @@ import ma.makar.tinkoffnews.models.News;
 import ma.makar.tinkoffnews.models.Title;
 import ma.makar.tinkoffnews.multithreading.ExecutorServiceBuilder;
 import ma.makar.tinkoffnews.multithreading.NamedThreadFactory;
-import ma.makar.tinkoffnews.utils.InformationShower;
+import ma.makar.tinkoffnews.ui.FlowNavigator;
+import ma.makar.tinkoffnews.ui.FragmentFlowNavigator;
+import ma.makar.tinkoffnews.ui.controllers.NewsViewController;
+import ma.makar.tinkoffnews.ui.controllers.TitlesViewController;
+import ma.makar.tinkoffnews.ui.controllers.ViewController;
+import ma.makar.tinkoffnews.utils.InfoShowManager;
+import ma.makar.tinkoffnews.utils.NetworkManager;
 
 public class DependencyResolver {
 
@@ -38,6 +39,7 @@ public class DependencyResolver {
     private final FlowNavigator mFlowNavigator;
     private final ViewController mTitlesViewController;
     private final ViewController mNewsViewController;
+    private final NetworkManager mNetworkManager;
 
     public static DependencyResolver create(FragmentActivity activity) {
         return new DependencyResolver(activity);
@@ -54,19 +56,26 @@ public class DependencyResolver {
         Mapper<List<Title>, String> titlesMapper = new TitlesJsonMapper();
         Mapper<News, String> newsMapper = new NewsJsonMapper();
         NetworkLoader<String, LoaderCallback<String>> dataLoader = new DataNetworkLoader();
-        UrlCreator<String> urlCreator = new TinkoffNewsUrlCreator();
         TitleLoader titleLoader = new TitleLoader(dataLoader, executor);
-        NetworkLoader<String, LoaderCallback<String>> newsLoader =
-                new TinkoffNewsLoader(urlCreator, dataLoader);
+        NetworkLoader<String, LoaderCallback<String>> newsLoader = new TinkoffNewsLoader(dataLoader);
 
-        InformationShower informationShower = new InformationShower(activity);
+        InfoShowManager infoShowManager = new InfoShowManager(activity);
         NewsRepository newsRepository = new NewsRepositoryImpl(newsLoader, titleLoader,
                 newsDiskCache, titlesMapper, newsMapper, executor);
 
+        mNetworkManager = new NetworkManager(activity);
         mFlowNavigator = new FragmentFlowNavigator(activity.getSupportFragmentManager());
         mTitlesViewController = new TitlesViewController(activity, newsRepository,
-                informationShower, mFlowNavigator);
-        mNewsViewController = new NewsViewController(activity, informationShower, newsRepository);
+                infoShowManager, mFlowNavigator, mNetworkManager);
+        mNewsViewController = new NewsViewController(activity, infoShowManager, newsRepository,
+                mNetworkManager);
+
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        activity.registerReceiver(mNetworkManager, filter);
+    }
+
+    public void destroy(FragmentActivity activity) {
+        activity.unregisterReceiver(mNetworkManager);
     }
 
     public FlowNavigator getFlowNavigator() {

@@ -1,19 +1,21 @@
 package ma.makar.tinkoffnews.multithreading;
 
+import android.support.annotation.NonNull;
+
 import java.util.concurrent.ThreadFactory;
 
 public class NamedThreadFactory implements ThreadFactory {
 
-    public final String name;
+    private final String mName;
 
     public NamedThreadFactory(String name) {
-        this.name = name;
+        mName = name;
     }
 
     @Override
-    public Thread newThread(Runnable r) {
+    public Thread newThread(@NonNull Runnable r) {
         Thread thread = new Thread(r);
-        thread.setName(name);
+        thread.setName(mName);
         return thread;
     }
 }

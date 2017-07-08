@@ -26,7 +26,7 @@ public class NewsDiskCache implements Storage<String, String> {
     @WorkerThread
     public boolean save(String id, String value) {
         File file = getFile(id);
-        return StreamUtils.save(value.getBytes(), file.getAbsolutePath());
+        return file != null && StreamUtils.save(value.getBytes(), file.getAbsolutePath());
     }
 
     @Override
@@ -34,31 +34,16 @@ public class NewsDiskCache implements Storage<String, String> {
     @WorkerThread
     public String get(String id) {
         File file = getFile(id);
-        return StreamUtils.get(file);
+        return file == null ? null : StreamUtils.get(file);
     }
 
-    @Override
-    @WorkerThread
-    public void remove(String id) {
-        getFile(id).delete();
-    }
-
-    @Override
-    @WorkerThread
-    public void clear() {
-        File[] files = mCacheDir.listFiles();
-        if (files != null) {
-            for (File f : files) {
-                f.delete();
-            }
-        }
-    }
-
+    @Nullable
     private File getFile(String id) {
         String fileName = id + FILE_TXT;
-        if (!mCacheDir.exists()) {
-            mCacheDir.mkdir();
+        boolean isDirectoryExists = mCacheDir.exists();
+        if (!isDirectoryExists) {
+            isDirectoryExists = mCacheDir.mkdir();
         }
-        return new File(mCacheDir, fileName);
+        return isDirectoryExists ? new File(mCacheDir, fileName) : null;
     }
 }

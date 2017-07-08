@@ -14,6 +14,8 @@ import ma.makar.tinkoffnews.di.DependencyResolver;
 
 public class TitleListFragment extends Fragment {
 
+    private ViewController mViewController;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -21,8 +23,14 @@ public class TitleListFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_title_list, null);
 
         DependencyResolver resolver = ((DependencyDistributor) getActivity()).getDependencyResolver();
-        ViewController viewController = resolver.getTitlesViewController();
-        viewController.attach(view, null);
+        mViewController = resolver.getTitlesViewController();
+        mViewController.attachView(view, null);
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        mViewController.detachView();
+        super.onDestroyView();
     }
 }

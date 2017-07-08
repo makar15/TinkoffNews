@@ -6,5 +6,7 @@ import android.view.View;
 
 public interface ViewController {
 
-    void attach(View view, @Nullable Bundle args);
+    void attachView(View view, @Nullable Bundle args);
+
+    void detachView();
 }

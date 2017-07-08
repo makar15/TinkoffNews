@@ -38,12 +38,6 @@ public abstract class RecyclerListAdapter<ViewHolder extends RecyclerView.ViewHo
 
     private @Nullable OnClickItemListener<V> mOnClickItemListener;
 
-    public RecyclerListAdapter() {}
-
-    public RecyclerListAdapter(List<V> list) {
-        mList.addAll(list);
-    }
-
     @Override
     public int getItemCount() {
         return mList.size();
@@ -55,7 +49,7 @@ public abstract class RecyclerListAdapter<ViewHolder extends RecyclerView.ViewHo
         fillHolder(holder, position);
     }
 
-    public V getItem(int position) {
+    V getItem(int position) {
         return mList.get(position);
     }
 
@@ -73,5 +67,4 @@ public abstract class RecyclerListAdapter<ViewHolder extends RecyclerView.ViewHo
     protected void fillHolder(ViewHolder holder, int position) {
         holder.itemView.setTag(getItem(position));
     }
-
 }

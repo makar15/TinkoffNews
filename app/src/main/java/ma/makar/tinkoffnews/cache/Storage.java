@@ -5,8 +5,4 @@ public interface Storage<K, V> {
     boolean save(K key, V value);
 
     V get(K key);
-
-    void remove(K key);
-
-    void clear();
 }

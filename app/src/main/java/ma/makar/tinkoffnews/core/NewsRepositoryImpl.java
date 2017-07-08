@@ -2,7 +2,6 @@ package ma.makar.tinkoffnews.core;
 
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.lang.ref.WeakReference;
 import java.util.List;
@@ -58,21 +57,11 @@ public class NewsRepositoryImpl implements NewsRepository {
      * после чего сохраненяем в DiskCache.
      */
     @Override
-    public void loadNewTitles(final LoaderCallback<List<Title>> callback) {
+    public void loadNewTitles(LoaderCallback<List<Title>> callback) {
         Assert.assertNotNull(callback);
 
-        mTitleLoader.loadInBackground(new LoaderCallback<String>() {
-            @Override
-            public void onLoaded(@Nullable String strTitles, @Nullable Exception e) {
-                if (TextUtils.isEmpty(strTitles) || e != null) {
-                    sendTitlesOnUiThread(null, callback, e);
-                    return;
-                }
-                List<Title> titles = mTitlesMapper.dataToModel(strTitles);
-                sendTitlesOnUiThread(titles, callback, null);
-                mNewsDiskCache.save(Constants.TITLE_UNIQUE_NAME_FILE, strTitles);
-            }
-        });
+        WeakReference<LoaderCallback<List<Title>>> weakCallback = new WeakReference<>(callback);
+        loadNewTitles(weakCallback);
     }
 
     /**
@@ -84,6 +73,30 @@ public class NewsRepositoryImpl implements NewsRepository {
 
         Thread newsLoadThread = new NewsLoadThread(id, callback);
         mExecutor.execute(newsLoadThread);
+    }
+
+    private void loadNewTitles(final WeakReference<LoaderCallback<List<Title>>> weakCallback) {
+        Assert.assertNotNull(weakCallback);
+
+        mTitleLoader.loadInBackground(new LoaderCallback<String>() {
+            @Override
+            public void onLoaded(@Nullable String strTitles, @Nullable Exception e) {
+                if (TextUtils.isEmpty(strTitles) || e != null) {
+                    LoaderCallback<List<Title>> callback = weakCallback.get();
+                    if (callback != null) {
+                        sendTitlesOnUiThread(null, callback, e);
+                    }
+                    return;
+                }
+
+                List<Title> titles = mTitlesMapper.dataToModel(strTitles);
+                LoaderCallback<List<Title>> callback = weakCallback.get();
+                if (callback != null) {
+                    sendTitlesOnUiThread(titles, callback, null);
+                }
+                mNewsDiskCache.save(Constants.TITLE_UNIQUE_NAME_FILE, strTitles);
+            }
+        });
     }
 
     private void sendTitlesOnUiThread(@Nullable final List<Title> titles,
@@ -110,7 +123,6 @@ public class NewsRepositoryImpl implements NewsRepository {
 
     private class TitlesLoadThread extends Thread {
 
-        private static final String TAG = "TitlesLoadThread";
         private final WeakReference<LoaderCallback<List<Title>>> mCallback;
 
         private TitlesLoadThread(LoaderCallback<List<Title>> callback) {
@@ -119,25 +131,24 @@ public class NewsRepositoryImpl implements NewsRepository {
 
         @Override
         public void run() {
-            LoaderCallback<List<Title>> callback = mCallback.get();
-            if (callback == null) {
-                Log.w(TAG, "LoaderCallback is null Object");
-                return;
-            }
             String strTitles = mNewsDiskCache.get(Constants.TITLE_UNIQUE_NAME_FILE);
             if (!TextUtils.isEmpty(strTitles)) {
                 List<Title> titles = mTitlesMapper.dataToModel(strTitles);
-                sendTitlesOnUiThread(titles, callback, null);
+                LoaderCallback<List<Title>> callback = mCallback.get();
+                if (callback != null) {
+                    sendTitlesOnUiThread(titles, callback, null);
+                }
                 return;
             }
-
-            loadNewTitles(callback);
+            LoaderCallback<List<Title>> callback = mCallback.get();
+            if (callback != null) {
+                loadNewTitles(callback);
+            }
         }
     }
 
     private class NewsLoadThread extends Thread {
 
-        private static final String TAG = "NewsLoadThread";
         private final String mId;
         private final WeakReference<LoaderCallback<News>> mCallback;
 
@@ -161,18 +172,18 @@ public class NewsRepositoryImpl implements NewsRepository {
             mNewsLoader.load(mId, new LoaderCallback<String>() {
                 @Override
                 public void onLoaded(@Nullable String strNews, Exception e) {
-                    LoaderCallback<News> callback = mCallback.get();
-                    if (callback == null) {
-                        Log.w(TAG, "LoaderCallback is null Object");
-                        return;
-                    }
-
                     if (TextUtils.isEmpty(strNews) || e != null) {
-                        sendNewsOnUiThread(null, callback, e);
+                        LoaderCallback<News> callback = mCallback.get();
+                        if (callback != null) {
+                            sendNewsOnUiThread(null, callback, e);
+                        }
                         return;
                     }
                     News news = mNewsMapper.dataToModel(strNews);
-                    sendNewsOnUiThread(news, callback, null);
+                    LoaderCallback<News> callback = mCallback.get();
+                    if (callback != null) {
+                        sendNewsOnUiThread(news, callback, null);
+                    }
                     mNewsDiskCache.save(mId, strNews);
                 }
             });

@@ -14,6 +14,8 @@ import ma.makar.tinkoffnews.di.DependencyResolver;
 
 public class NewsDetailFragment extends Fragment {
 
+    private ViewController mViewController;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
@@ -21,8 +23,14 @@ public class NewsDetailFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_news_detail, null);
 
         DependencyResolver resolver = ((DependencyDistributor) getActivity()).getDependencyResolver();
-        ViewController viewController = resolver.getNewsViewController();
-        viewController.attach(view, getArguments());
+        mViewController = resolver.getNewsViewController();
+        mViewController.attachView(view, getArguments());
         return view;
+    }
+
+    @Override
+    public void onDestroyView() {
+        mViewController.detachView();
+        super.onDestroyView();
     }
 }

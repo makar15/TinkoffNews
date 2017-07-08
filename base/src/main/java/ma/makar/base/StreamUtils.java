@@ -2,6 +2,7 @@ package ma.makar.base;
 
 import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
+import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,6 +13,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class StreamUtils {
+
+    private static final String TAG = "StreamUtils";
 
     @WorkerThread
     public static boolean save(byte[] data, String path) {
@@ -28,15 +31,18 @@ public class StreamUtils {
     }
 
     @Nullable
-    public static String get(File file) {
+    public static String get(@Nullable File file) {
+        if (file == null) {
+            Log.e(TAG, "File is null Object");
+            return null;
+        }
         FileInputStream input = null;
         if (!file.exists()) {
             return null;
         }
         try {
             input = new FileInputStream(file);
-            String result = StreamUtils.readInputStream(input);
-            return result;
+            return StreamUtils.readInputStream(input);
         } catch (IOException ignored) {
             return null;
         } finally {
@@ -45,7 +51,11 @@ public class StreamUtils {
     }
 
     @Nullable
-    public static String readInputStream(InputStream inputStream) {
+    public static String readInputStream(@Nullable InputStream inputStream) {
+        if (inputStream == null) {
+            Log.e(TAG, "InputStream is null Object");
+            return null;
+        }
         StringBuilder total = new StringBuilder();
         BufferedReader reader = null;
         String line;

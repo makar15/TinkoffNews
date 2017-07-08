@@ -3,11 +3,11 @@ package ma.makar.tinkoffnews.utils;
 import android.content.Context;
 import android.widget.Toast;
 
-public class InformationShower {
+public class InfoShowManager {
 
     private final Context mContext;
 
-    public InformationShower(Context context) {
+    public InfoShowManager(Context context) {
         mContext = context;
     }
 
